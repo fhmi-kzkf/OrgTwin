@@ -12,12 +12,9 @@ dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  console.error('FATAL: GEMINI_API_KEY is not set in .env.local');
-  process.exit(1);
-}
 
-const ai = new GoogleGenAI({ apiKey });
+// Don't process.exit in serverless — lazily check per-request instead
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 const MODEL = 'gemini-2.5-flash-preview-05-20';
 const PersonaValues = ['CFO', 'CMO', 'CTO', 'AUDITOR'];
 
@@ -70,6 +67,10 @@ function safeJsonParse(text: string | undefined, fallback: any = {}) {
 // --- POST /api/context ---
 app.post('/api/context', async (req: Request, res: Response) => {
   try {
+    if (!ai) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+    }
+
     const objective = sanitize(req.body?.objective);
     if (!objective) return res.status(400).json({ error: 'Objective is required.' });
 
@@ -100,14 +101,18 @@ app.post('/api/context', async (req: Request, res: Response) => {
     const data = safeJsonParse(response.text);
     res.json(data);
   } catch (err: any) {
-    console.error('[/api/context Error]', err.message);
-    res.status(500).json({ error: 'Failed to generate corporate context.' });
+    console.error('[/api/context Error]', err.message, err.stack);
+    res.status(500).json({ error: `Context generation failed: ${err.message}` });
   }
 });
 
 // --- POST /api/simulate ---
 app.post('/api/simulate', async (req: Request, res: Response) => {
   try {
+    if (!ai) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server.' });
+    }
+
     const { objective: rawObj, context, artifacts = [] } = req.body || {};
     const objective = sanitize(rawObj);
     if (!objective || !context) {
@@ -260,8 +265,8 @@ app.post('/api/simulate', async (req: Request, res: Response) => {
 
     res.json(result);
   } catch (err: any) {
-    console.error('[/api/simulate Error]', err.message);
-    res.status(500).json({ error: 'Simulation failed. Please try again.' });
+    console.error('[/api/simulate Error]', err.message, err.stack);
+    res.status(500).json({ error: `Simulation failed: ${err.message}` });
   }
 });
 
