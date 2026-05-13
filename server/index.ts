@@ -15,7 +15,7 @@ const apiKey = process.env.GEMINI_API_KEY;
 
 // Don't process.exit in serverless — lazily check per-request instead
 const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
-const MODEL = 'gemini-2.5-flash-preview-05-20';
+const MODEL = 'gemini-3.1-flash-lite-preview';
 const PersonaValues = ['CFO', 'CMO', 'CTO', 'AUDITOR'];
 
 const app = express();
