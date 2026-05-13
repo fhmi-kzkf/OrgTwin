@@ -33,6 +33,21 @@ function rateLimiter(req: Request, res: Response, next: NextFunction) {
 app.use('/api', rateLimiter);
 
 // --- Helpers ---
+async function generateWithRetry(options: any, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await ai!.models.generateContent(options);
+    } catch (err: any) {
+      const isUnavailable = err.message?.includes('503') || err.message?.includes('UNAVAILABLE') || err.status === 503;
+      if (i === maxRetries - 1 || !isUnavailable) {
+        throw err;
+      }
+      console.warn(`[Retry ${i + 1}/${maxRetries}] Gemini API unavailable, retrying in 2s...`);
+      await new Promise(r => setTimeout(r, 2000));
+    }
+  }
+}
+
 function sanitize(text: string, maxLen = 2000): string {
   if (typeof text !== 'string') return '';
   return text.slice(0, maxLen).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim();
@@ -68,7 +83,7 @@ app.post('/api/context', async (req: Request, res: Response) => {
     3. Technical Landscape (Infrastructure status, R&D progress)
     Return the response in valid JSON format.`;
 
-    const response = await ai.models.generateContent({
+    const response = await generateWithRetry({
       model: MODEL,
       contents: prompt,
       config: {
@@ -143,7 +158,7 @@ app.post('/api/simulate', async (req: Request, res: Response) => {
       }
     }
 
-    const response = await ai.models.generateContent({
+    const response = await generateWithRetry({
       model: MODEL,
       contents: [{ role: 'user', parts }],
       config: {
