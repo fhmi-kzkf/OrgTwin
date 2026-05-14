@@ -84,7 +84,7 @@ export default function App() {
       {/* Header */}
       <header className="max-w-7xl mx-auto pt-16 px-8 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-800/80 relative z-10">
         <div>
-          <h1 className="text-4xl font-semibold tracking-tight text-zinc-100 mb-2">OrgSim Engine</h1>
+          <h1 className="text-4xl font-semibold tracking-tight text-zinc-100 mb-2">OrgTwin Engine</h1>
           <p className="text-sm font-medium text-zinc-400">Strategic Stress-Testing Sandbox</p>
         </div>
       </header>
@@ -280,7 +280,7 @@ export default function App() {
       <footer className="border-t border-zinc-800/80 relative z-10 bg-zinc-950/50">
         <div className="max-w-7xl mx-auto py-8 px-8 flex flex-col md:flex-row justify-between items-center text-xs font-medium text-zinc-500 uppercase tracking-widest">
           <div>SYSTEM STATUS: NOMINAL — MULTIMODAL GROUNDING: ACTIVE</div>
-          <div>ORGSIM_CORE_v4.1.0</div>
+          <div>ORGTWIN_CORE_v4.1.0</div>
         </div>
       </footer>
     </div>
